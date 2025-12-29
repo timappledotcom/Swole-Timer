@@ -24,7 +24,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.example.swole_timer"
-    compileSdk 35
+    compileSdk 36
     ndkVersion flutter.ndkVersion
     buildToolsVersion "35.0.0"
 
@@ -65,5 +65,5 @@ flutter {
 
 dependencies {
     // Required for flutter_local_notifications on Android
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'models/models.dart';
 import 'providers/providers.dart';
 import 'services/services.dart';
 import 'screens/screens.dart';
@@ -45,6 +46,9 @@ class _SwoleTimerAppState extends State<SwoleTimerApp> {
     // Set up notification tap handler
     NotificationService.onNotificationTapped = _handleNotificationTap;
 
+    // Set up snooze handler
+    NotificationService.onSnoozeTapped = _handleSnoozeTap;
+
     // Initialize providers
     _initializeProviders();
   }
@@ -65,6 +69,47 @@ class _SwoleTimerAppState extends State<SwoleTimerApp> {
           builder: (_) => const ActiveSessionScreen(),
         ),
       );
+    }
+  }
+
+  Future<void> _handleSnoozeTap(String? exerciseId, int minutes) async {
+    if (exerciseId == null) return;
+
+    final exercise = _exerciseProvider.getExerciseById(exerciseId);
+    if (exercise == null) return;
+
+    // Load current scheduled exercises
+    final scheduled = await widget.storageService.loadScheduledExercises();
+    if (scheduled == null) return;
+
+    // Find the matching scheduled exercise
+    final scheduledExercise = scheduled.firstWhere(
+      (s) => s.exerciseId == exerciseId,
+      orElse: () => ScheduledExercise(
+        exerciseId: exerciseId,
+        exerciseName: exercise.name,
+        scheduledTime: DateTime.now(),
+        notificationId: 0,
+      ),
+    );
+
+    // Snooze the notification
+    final snoozed = await NotificationService().snoozeNotification(
+      scheduled: scheduledExercise,
+      exercise: exercise,
+      snoozeMinutes: minutes,
+    );
+
+    if (snoozed != null) {
+      // Update in storage
+      final index = scheduled.indexWhere((s) => s.exerciseId == exerciseId);
+      if (index != -1) {
+        scheduled[index] = snoozed;
+        scheduled.sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
+        await widget.storageService.saveScheduledExercises(scheduled);
+      }
+
+      debugPrint('Snoozed ${exercise.name} for $minutes minutes');
     }
   }
 

@@ -21,6 +21,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<_OnboardingPage> _pages = [
     _OnboardingPage(
+      icon: Icons.directions_walk,
+      title: 'Walk Every Day',
+      subtitle: '30 Minutes for a Healthier You',
+      body: '''Walking is the foundation of good health. Just 30 minutes of walking each day can:
+
+• Improve cardiovascular health
+• Boost mood and reduce stress
+• Aid digestion and metabolism
+• Strengthen bones and muscles
+
+Track your daily walk with a simple checkbox. Build a streak and watch your progress grow week by week!''',
+    ),
+    _OnboardingPage(
       icon: Icons.fitness_center,
       title: 'Greasing the Groove',
       subtitle: 'The Soviet Secret to Strength',

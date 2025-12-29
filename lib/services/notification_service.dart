@@ -19,6 +19,9 @@ class NotificationService {
   /// Callback for when notification is tapped
   static Function(String? exerciseId)? onNotificationTapped;
 
+  /// Callback for snooze action
+  static Function(String? exerciseId, int minutes)? onSnoozeTapped;
+
   /// Initialize the notification service
   Future<void> init() async {
     if (_initialized) return;
@@ -27,7 +30,8 @@ class NotificationService {
     tz_data.initializeTimeZones();
 
     // Android initialization settings
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     // Initialization settings for all platforms
     const initSettings = InitializationSettings(
@@ -45,6 +49,18 @@ class NotificationService {
   /// Handle notification tap
   static void _onNotificationResponse(NotificationResponse response) {
     final payload = response.payload;
+    final actionId = response.actionId;
+
+    // Handle snooze actions
+    if (actionId != null && actionId.startsWith('snooze_') && payload != null) {
+      final minutes = int.tryParse(actionId.replaceFirst('snooze_', '')) ?? 30;
+      if (onSnoozeTapped != null) {
+        onSnoozeTapped!(payload, minutes);
+      }
+      return;
+    }
+
+    // Handle regular notification tap
     if (payload != null && onNotificationTapped != null) {
       onNotificationTapped!(payload);
     }
@@ -64,12 +80,13 @@ class NotificationService {
 
   /// Schedule all daily exercise notifications at random times within active window
   /// This should be called once per day (on app launch or via WorkManager)
-  Future<void> scheduleDailyNotifications({
+  /// Returns a list of ScheduledExercise objects for display purposes
+  Future<List<ScheduledExercise>> scheduleDailyNotifications({
     required List<Exercise> availableExercises,
     required AppSettings settings,
   }) async {
-    if (!settings.notificationsEnabled) return;
-    if (availableExercises.isEmpty) return;
+    if (!settings.notificationsEnabled) return [];
+    if (availableExercises.isEmpty) return [];
 
     // Cancel existing notifications first
     await cancelAllNotifications();
@@ -103,7 +120,8 @@ class NotificationService {
     );
 
     // Filter out times that have already passed
-    final futureTimes = scheduleTimes.where((time) => time.isAfter(now)).toList();
+    final futureTimes =
+        scheduleTimes.where((time) => time.isAfter(now)).toList();
 
     // Create a shuffled list of exercises to use (avoids repeats when possible)
     final exercisesToSchedule = _selectExercisesForDay(
@@ -112,18 +130,30 @@ class NotificationService {
       random: random,
     );
 
+    // List to store scheduled exercises for return
+    final scheduledExercises = <ScheduledExercise>[];
+
     // Schedule notifications at each time
     for (var i = 0; i < futureTimes.length; i++) {
       final exercise = exercisesToSchedule[i];
-      
+
       await _scheduleNotification(
         id: i,
         exercise: exercise,
         scheduledTime: futureTimes[i],
       );
+
+      // Create ScheduledExercise for tracking
+      scheduledExercises.add(ScheduledExercise(
+        exerciseId: exercise.id,
+        exerciseName: exercise.name,
+        scheduledTime: futureTimes[i],
+        notificationId: i,
+      ));
     }
 
     debugPrint('Scheduled ${futureTimes.length} notifications for today');
+    return scheduledExercises;
   }
 
   /// Select exercises for the day, avoiding repeats when possible
@@ -134,20 +164,20 @@ class NotificationService {
     required Random random,
   }) {
     if (availableExercises.isEmpty) return [];
-    
+
     final result = <Exercise>[];
-    
+
     // Shuffle the available exercises to randomize order
     final shuffled = List<Exercise>.from(availableExercises)..shuffle(random);
-    
+
     // Fill the result list, cycling through shuffled exercises if needed
     for (var i = 0; i < count; i++) {
       result.add(shuffled[i % shuffled.length]);
     }
-    
+
     // Shuffle again so the order isn't predictable
     result.shuffle(random);
-    
+
     return result;
   }
 
@@ -168,7 +198,8 @@ class NotificationService {
       // Window too small for all notifications, distribute evenly
       final interval = windowDurationMinutes ~/ count;
       for (var i = 0; i < count; i++) {
-        times.add(windowStart.add(Duration(minutes: interval * i + interval ~/ 2)));
+        times.add(
+            windowStart.add(Duration(minutes: interval * i + interval ~/ 2)));
       }
     } else {
       // Generate random times with minimum gap
@@ -181,8 +212,8 @@ class NotificationService {
           final randomMinutes = random.nextInt(windowDurationMinutes);
           newTime = windowStart.add(Duration(minutes: randomMinutes));
           attempts++;
-        } while (_isTooCloseToExisting(newTime, times, minGap) && 
-                 attempts < maxAttempts);
+        } while (_isTooCloseToExisting(newTime, times, minGap) &&
+            attempts < maxAttempts);
 
         times.add(newTime);
       }
@@ -194,7 +225,8 @@ class NotificationService {
   }
 
   /// Check if a time is too close to existing scheduled times
-  bool _isTooCloseToExisting(DateTime time, List<DateTime> existing, int minGapMinutes) {
+  bool _isTooCloseToExisting(
+      DateTime time, List<DateTime> existing, int minGapMinutes) {
     for (final existingTime in existing) {
       final diff = time.difference(existingTime).inMinutes.abs();
       if (diff < minGapMinutes) {
@@ -218,12 +250,30 @@ class NotificationService {
       priority: Priority.high,
       ticker: 'Exercise time!',
       icon: '@mipmap/ic_launcher',
+      actions: <AndroidNotificationAction>[
+        const AndroidNotificationAction(
+          'snooze_30',
+          '⏰ 30 min',
+          showsUserInterface: false,
+        ),
+        const AndroidNotificationAction(
+          'snooze_60',
+          '⏰ 60 min',
+          showsUserInterface: false,
+        ),
+        const AndroidNotificationAction(
+          'snooze_90',
+          '⏰ 90 min',
+          showsUserInterface: false,
+        ),
+      ],
     );
 
     final notificationDetails = NotificationDetails(android: androidDetails);
 
     // Create notification body with exercise info
-    final body = '${exercise.currentReps} reps • ${exercise.relatedStretch.split('.').first}';
+    final body =
+        '${exercise.currentReps} reps • ${exercise.relatedStretch.split('.').first}';
 
     await _notifications.zonedSchedule(
       id,
@@ -232,8 +282,6 @@ class NotificationService {
       tz.TZDateTime.from(scheduledTime, tz.local),
       notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: exercise.id,
     );
 
@@ -274,5 +322,28 @@ class NotificationService {
   /// Get pending notifications (for debugging)
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     return await _notifications.pendingNotificationRequests();
+  }
+
+  /// Snooze a notification by rescheduling it
+  Future<ScheduledExercise?> snoozeNotification({
+    required ScheduledExercise scheduled,
+    required Exercise exercise,
+    required int snoozeMinutes,
+  }) async {
+    // Cancel the original notification
+    await cancelNotification(scheduled.notificationId);
+
+    // Calculate new time
+    final newTime = DateTime.now().add(Duration(minutes: snoozeMinutes));
+
+    // Schedule new notification
+    await _scheduleNotification(
+      id: scheduled.notificationId + 100, // Offset ID to avoid conflicts
+      exercise: exercise,
+      scheduledTime: newTime,
+    );
+
+    // Return updated scheduled exercise
+    return scheduled.snooze(snoozeMinutes);
   }
 }
