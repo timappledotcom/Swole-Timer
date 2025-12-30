@@ -34,40 +34,47 @@ class SettingsScreen extends StatelessWidget {
               _buildSectionTitle(context, 'SPORT MODE DAYS'),
               const SizedBox(height: 12),
               _buildDaySelector(context, provider, settings),
-              
+
               const SizedBox(height: 32),
-              
+
               // Active Window Section
               _buildSectionTitle(context, 'ACTIVE WINDOW'),
               const SizedBox(height: 12),
               _buildTimeSelector(context, provider, settings),
-              
+
               const SizedBox(height: 32),
-              
+
               // Snacks per day
               _buildSectionTitle(context, 'DAILY SNACKS'),
               const SizedBox(height: 12),
               _buildSnacksSelector(context, provider, settings),
-              
+
               const SizedBox(height: 32),
-              
+
+              // Exercise Management
+              _buildSectionTitle(context, 'MANAGE EXERCISES'),
+              const SizedBox(height: 12),
+              _buildExerciseManagementButton(context),
+
+              const SizedBox(height: 32),
+
               // Actions
               _buildShuffleExercisesButton(context),
-              
+
               const SizedBox(height: 12),
-              
+
               _buildRescheduleButton(context),
-              
+
               const SizedBox(height: 16),
-              
+
               // How It Works link
               _buildHowItWorksButton(context),
-              
+
               const SizedBox(height: 16),
-              
+
               // Reset exercises data
               _buildResetExercisesButton(context),
-              
+
               const SizedBox(height: 48),
             ],
           );
@@ -431,8 +438,8 @@ class SettingsScreen extends StatelessWidget {
     await exerciseProvider.resetTodaysExercises(settingsProvider.settings);
 
     // Get the newly available exercises
-    final availableExercises =
-        exerciseProvider.getAvailableExercisesForToday(settingsProvider.settings);
+    final availableExercises = exerciseProvider
+        .getAvailableExercisesForToday(settingsProvider.settings);
 
     // Reschedule notifications with the fresh pool
     await NotificationService().scheduleDailyNotifications(
@@ -447,7 +454,8 @@ class SettingsScreen extends StatelessWidget {
       final exerciseType = isSportDay ? 'mobility' : 'strength';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Shuffled! ${availableExercises.length} $exerciseType exercises ready 🎲'),
+          content: Text(
+              'Shuffled! ${availableExercises.length} $exerciseType exercises ready 🎲'),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -461,8 +469,8 @@ class SettingsScreen extends StatelessWidget {
     final exerciseProvider = context.read<ExerciseProvider>();
     final settingsProvider = context.read<SettingsProvider>();
 
-    final availableExercises =
-        exerciseProvider.getAvailableExercisesForToday(settingsProvider.settings);
+    final availableExercises = exerciseProvider
+        .getAvailableExercisesForToday(settingsProvider.settings);
 
     await NotificationService().scheduleDailyNotifications(
       availableExercises: availableExercises,
@@ -547,5 +555,226 @@ class SettingsScreen extends StatelessWidget {
         ),
       );
     }
+  }
+
+  Widget _buildExerciseManagementButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ListTile(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const ExerciseManagementScreen()),
+        ),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.fitness_center,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        title: const Text('Select Exercises'),
+        subtitle: const Text('Enable or disable exercises in rotation'),
+        trailing: const Icon(Icons.chevron_right),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+    );
+  }
+}
+
+/// Screen for managing which exercises are enabled/disabled
+class ExerciseManagementScreen extends StatelessWidget {
+  const ExerciseManagementScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Manage Exercises'),
+        centerTitle: true,
+      ),
+      body: Consumer<ExerciseProvider>(
+        builder: (context, provider, _) {
+          final strengthExercises = provider.strengthExercises;
+          final mobilityExercises = provider.mobilityExercises;
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Strength exercises section
+              _buildExerciseSection(
+                context,
+                provider,
+                'STRENGTH EXERCISES (Rest Days)',
+                strengthExercises,
+                Colors.blue,
+              ),
+
+              const SizedBox(height: 24),
+
+              // Mobility exercises section
+              _buildExerciseSection(
+                context,
+                provider,
+                'MOBILITY EXERCISES (Sport Days)',
+                mobilityExercises,
+                Colors.orange,
+              ),
+
+              const SizedBox(height: 32),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildExerciseSection(
+    BuildContext context,
+    ExerciseProvider provider,
+    String title,
+    List<Exercise> exercises,
+    Color color,
+  ) {
+    final enabledCount = exercises.where((e) => e.isEnabled).length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '$enabledCount/${exercises.length} enabled',
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: exercises.asMap().entries.map((entry) {
+              final index = entry.key;
+              final exercise = entry.value;
+              final isLast = index == exercises.length - 1;
+
+              return Column(
+                children: [
+                  _buildExerciseTile(context, provider, exercise, color),
+                  if (!isLast)
+                    Divider(
+                      height: 1,
+                      indent: 16,
+                      endIndent: 16,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withOpacity(0.1),
+                    ),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExerciseTile(
+    BuildContext context,
+    ExerciseProvider provider,
+    Exercise exercise,
+    Color color,
+  ) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: exercise.isEnabled
+              ? color.withOpacity(0.15)
+              : Colors.grey.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          exercise.type == ExerciseType.strength
+              ? Icons.fitness_center
+              : Icons.self_improvement,
+          color: exercise.isEnabled ? color : Colors.grey,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        exercise.name,
+        style: TextStyle(
+          color: exercise.isEnabled ? null : Colors.grey,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      subtitle: Row(
+        children: [
+          Text(
+            exercise.isTimed
+                ? '${exercise.currentReps}s'
+                : '${exercise.currentReps} reps',
+            style: TextStyle(
+              fontSize: 12,
+              color: exercise.isEnabled
+                  ? Theme.of(context).colorScheme.outline
+                  : Colors.grey,
+            ),
+          ),
+          if (exercise.isBilateral) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.teal.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'Both sides',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.teal,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      trailing: Switch.adaptive(
+        value: exercise.isEnabled,
+        onChanged: (value) => provider.setExerciseEnabled(exercise.id, value),
+        activeColor: color,
+      ),
+    );
   }
 }

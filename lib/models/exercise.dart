@@ -31,10 +31,18 @@ class Exercise {
   final String name;
   final String description;
   final ExerciseType type;
+
   /// For timed exercises, this is seconds. For rep exercises, this is reps.
   int currentReps;
+
   /// If true, currentReps represents seconds instead of repetitions
   final bool isTimed;
+
+  /// If true, this exercise needs to be done on both sides (e.g., stretches)
+  final bool isBilateral;
+
+  /// If false, this exercise is excluded from the rotation
+  bool isEnabled;
   final String relatedStretch;
   DateTime? lastPerformedDate;
 
@@ -45,6 +53,8 @@ class Exercise {
     required this.type,
     required this.currentReps,
     this.isTimed = false,
+    this.isBilateral = false,
+    this.isEnabled = true,
     required this.relatedStretch,
     this.lastPerformedDate,
   });
@@ -52,7 +62,7 @@ class Exercise {
   /// Check if exercise was performed yesterday (anti-repetition rule)
   bool wasPerformedYesterday() {
     if (lastPerformedDate == null) return false;
-    
+
     final now = DateTime.now();
     final yesterday = DateTime(now.year, now.month, now.day - 1);
     final performedDate = DateTime(
@@ -60,14 +70,14 @@ class Exercise {
       lastPerformedDate!.month,
       lastPerformedDate!.day,
     );
-    
+
     return performedDate.isAtSameMomentAs(yesterday);
   }
 
   /// Check if exercise was performed today
   bool wasPerformedToday() {
     if (lastPerformedDate == null) return false;
-    
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final performedDate = DateTime(
@@ -75,7 +85,7 @@ class Exercise {
       lastPerformedDate!.month,
       lastPerformedDate!.day,
     );
-    
+
     return performedDate.isAtSameMomentAs(today);
   }
 
@@ -88,6 +98,8 @@ class Exercise {
       type: ExerciseTypeExtension.fromJson(json['type'] as String),
       currentReps: json['currentReps'] as int,
       isTimed: json['isTimed'] as bool? ?? false,
+      isBilateral: json['isBilateral'] as bool? ?? false,
+      isEnabled: json['isEnabled'] as bool? ?? true,
       relatedStretch: json['relatedStretch'] as String,
       lastPerformedDate: json['lastPerformedDate'] != null
           ? DateTime.parse(json['lastPerformedDate'] as String)
@@ -104,6 +116,8 @@ class Exercise {
       'type': type.toJson(),
       'currentReps': currentReps,
       'isTimed': isTimed,
+      'isBilateral': isBilateral,
+      'isEnabled': isEnabled,
       'relatedStretch': relatedStretch,
       'lastPerformedDate': lastPerformedDate?.toIso8601String(),
     };
@@ -117,6 +131,8 @@ class Exercise {
     ExerciseType? type,
     int? currentReps,
     bool? isTimed,
+    bool? isBilateral,
+    bool? isEnabled,
     String? relatedStretch,
     DateTime? lastPerformedDate,
   }) {
@@ -127,6 +143,8 @@ class Exercise {
       type: type ?? this.type,
       currentReps: currentReps ?? this.currentReps,
       isTimed: isTimed ?? this.isTimed,
+      isBilateral: isBilateral ?? this.isBilateral,
+      isEnabled: isEnabled ?? this.isEnabled,
       relatedStretch: relatedStretch ?? this.relatedStretch,
       lastPerformedDate: lastPerformedDate ?? this.lastPerformedDate,
     );
@@ -152,6 +170,7 @@ class Exercise {
 class ExerciseData {
   /// Default starting rep count for new exercises
   static const int defaultStartingReps = 4;
+
   /// Default starting seconds for timed exercises
   static const int defaultStartingSeconds = 30;
 
@@ -162,11 +181,13 @@ class ExerciseData {
       Exercise(
         id: 'deep_squat',
         name: 'Deep Squat (Paleo Chair)',
-        description: 'A resting squat held for time. Heels down, butt to ankles.',
+        description:
+            'A resting squat held for time. Heels down, butt to ankles.',
         type: ExerciseType.strength,
         currentReps: defaultStartingSeconds,
         isTimed: true,
-        relatedStretch: 'Ankle Circles: Rotate each ankle 10 times in each direction.',
+        relatedStretch:
+            'Ankle Circles: Rotate each ankle 10 times in each direction.',
       ),
       Exercise(
         id: 'air_squat',
@@ -174,55 +195,73 @@ class ExerciseData {
         description: 'Basic knee/hip flexion. Keep chest high.',
         type: ExerciseType.strength,
         currentReps: defaultStartingReps,
-        relatedStretch: 'Standing Quad Stretch: Pull foot to glutes, hold 30 seconds each side.',
+        relatedStretch:
+            'Standing Quad Stretch: Pull foot to glutes, hold 30 seconds each side.',
       ),
       Exercise(
         id: 'reverse_lunge',
         name: 'Reverse Lunge',
-        description: 'Easier on the knees than forward lunges; opens the hip flexor of the trailing leg.',
+        description:
+            'Easier on the knees than forward lunges; opens the hip flexor of the trailing leg.',
         type: ExerciseType.strength,
         currentReps: 3, // Per leg
-        relatedStretch: 'Hip Flexor Stretch: Kneel on one knee, push hips forward. Hold 30 seconds each side.',
+        isBilateral: true,
+        relatedStretch:
+            'Hip Flexor Stretch: Kneel on one knee, push hips forward. Hold 30 seconds each side.',
       ),
       Exercise(
         id: 'cossack_squat',
         name: 'Cossack Squat',
-        description: 'A side-to-side squat that deeply stretches the inner groin and trains lateral mobility.',
+        description:
+            'A side-to-side squat that deeply stretches the inner groin and trains lateral mobility.',
         type: ExerciseType.strength,
         currentReps: 3, // Per side
-        relatedStretch: 'Adductor Stretch: Wide stance, shift weight to one side, hold 30 seconds.',
+        isBilateral: true,
+        relatedStretch:
+            'Adductor Stretch: Wide stance, shift weight to one side, hold 30 seconds.',
       ),
       Exercise(
         id: 'single_leg_glute_bridge',
         name: 'Single-Leg Glute Bridge',
-        description: 'Lying on back, one foot on floor, driving hips up. Excellent for glute isolation.',
+        description:
+            'Lying on back, one foot on floor, driving hips up. Excellent for glute isolation.',
         type: ExerciseType.strength,
         currentReps: defaultStartingReps, // Per leg
-        relatedStretch: 'Figure-4 Stretch: Ankle on opposite knee, pull knee toward chest.',
+        isBilateral: true,
+        relatedStretch:
+            'Figure-4 Stretch: Ankle on opposite knee, pull knee toward chest.',
       ),
       Exercise(
         id: 'bulgarian_split_squat',
         name: 'Bulgarian Split Squat',
-        description: 'Put your back foot on a couch or low wall (or just hover it). The "king" of leg builders.',
+        description:
+            'Put your back foot on a couch or low wall (or just hover it). The "king" of leg builders.',
         type: ExerciseType.strength,
         currentReps: 3, // Per leg
-        relatedStretch: 'Pigeon Pose: Leg folded under body, lean forward to open hip.',
+        isBilateral: true,
+        relatedStretch:
+            'Pigeon Pose: Leg folded under body, lean forward to open hip.',
       ),
       Exercise(
         id: 'pistol_squat',
         name: 'Pistol Squat',
-        description: 'Single-leg squat. Modify by holding a doorframe or sitting to a chair.',
+        description:
+            'Single-leg squat. Modify by holding a doorframe or sitting to a chair.',
         type: ExerciseType.strength,
         currentReps: 2, // Per leg - challenging!
-        relatedStretch: 'Standing Hamstring Stretch: Foot on low surface, lean forward.',
+        isBilateral: true,
+        relatedStretch:
+            'Standing Hamstring Stretch: Foot on low surface, lean forward.',
       ),
       Exercise(
         id: 'duck_walk',
         name: 'Duck Walk',
-        description: 'Walking while in a full squat position. Great for ankle mobility.',
+        description:
+            'Walking while in a full squat position. Great for ankle mobility.',
         type: ExerciseType.strength,
         currentReps: 10, // Steps
-        relatedStretch: 'Deep Squat Hold: Rest in bottom squat position for 30 seconds.',
+        relatedStretch:
+            'Deep Squat Hold: Rest in bottom squat position for 30 seconds.',
       ),
       Exercise(
         id: 'calf_raises',
@@ -230,12 +269,14 @@ class ExerciseData {
         description: 'Standing on a flat floor or a stair step.',
         type: ExerciseType.strength,
         currentReps: 10,
-        relatedStretch: 'Wall Calf Stretch: Hands on wall, one leg back, heel down.',
+        relatedStretch:
+            'Wall Calf Stretch: Hands on wall, one leg back, heel down.',
       ),
       Exercise(
         id: 'broad_jump',
         name: 'Broad Jump',
-        description: 'Exploring explosive power. Jump forward for distance, land softly.',
+        description:
+            'Exploring explosive power. Jump forward for distance, land softly.',
         type: ExerciseType.strength,
         currentReps: 3,
         relatedStretch: 'Dynamic Leg Swings: Forward and back, 10 each leg.',
@@ -248,7 +289,8 @@ class ExerciseData {
         description: 'The classic. Targets chest and triceps.',
         type: ExerciseType.strength,
         currentReps: defaultStartingReps,
-        relatedStretch: 'Doorway Chest Stretch: Arms on frame at 90°, lean forward, hold 30 seconds.',
+        relatedStretch:
+            'Doorway Chest Stretch: Arms on frame at 90°, lean forward, hold 30 seconds.',
       ),
       Exercise(
         id: 'diamond_pushup',
@@ -264,28 +306,34 @@ class ExerciseData {
         description: 'Hands wider than shoulders to target chest.',
         type: ExerciseType.strength,
         currentReps: defaultStartingReps,
-        relatedStretch: 'Doorway Chest Stretch: Arms wide on frame, lean through.',
+        relatedStretch:
+            'Doorway Chest Stretch: Arms wide on frame, lean through.',
       ),
       Exercise(
         id: 'pike_pushup',
         name: 'Pike Push-Up',
-        description: 'Body in an upside-down V. Targets the shoulders (simulates a handstand push-up).',
+        description:
+            'Body in an upside-down V. Targets the shoulders (simulates a handstand push-up).',
         type: ExerciseType.strength,
         currentReps: 3,
-        relatedStretch: 'Shoulder Circles: Large circles forward and back, 10 each direction.',
+        relatedStretch:
+            'Shoulder Circles: Large circles forward and back, 10 each direction.',
       ),
       Exercise(
         id: 'hindu_pushup',
         name: 'Hindu Push-Up (Dive Bomber)',
-        description: 'Swooping from a Downward Dog into a Cobra pose. Works shoulders, chest, and spinal flexibility.',
+        description:
+            'Swooping from a Downward Dog into a Cobra pose. Works shoulders, chest, and spinal flexibility.',
         type: ExerciseType.strength,
         currentReps: 3,
-        relatedStretch: 'Cobra Pose: Lie on stomach, push chest up, hold 30 seconds.',
+        relatedStretch:
+            'Cobra Pose: Lie on stomach, push chest up, hold 30 seconds.',
       ),
       Exercise(
         id: 'plank_to_pushup',
         name: 'Plank-to-Push-Up',
-        description: 'Starting in a forearm plank, pushing up to a hand plank, and back down.',
+        description:
+            'Starting in a forearm plank, pushing up to a hand plank, and back down.',
         type: ExerciseType.strength,
         currentReps: defaultStartingReps,
         relatedStretch: 'Wrist Circles: Rotate wrists 10 times each direction.',
@@ -295,34 +343,42 @@ class ExerciseData {
       Exercise(
         id: 'prone_cobra',
         name: 'Prone Cobra / Superman',
-        description: 'Lying on stomach, lifting chest and thighs off the ground. Essential for strengthening the lower back.',
+        description:
+            'Lying on stomach, lifting chest and thighs off the ground. Essential for strengthening the lower back.',
         type: ExerciseType.strength,
         currentReps: 5, // Holds
-        relatedStretch: 'Child\'s Pose: Sit back on heels, arms extended, breathe deeply.',
+        relatedStretch:
+            'Child\'s Pose: Sit back on heels, arms extended, breathe deeply.',
       ),
       Exercise(
         id: 'prone_ywt',
         name: 'Prone Y-W-T Raises',
-        description: 'Lying on stomach, moving arms into Y, W, and T shapes to fire the rhomboids and rear delts.',
+        description:
+            'Lying on stomach, moving arms into Y, W, and T shapes to fire the rhomboids and rear delts.',
         type: ExerciseType.strength,
         currentReps: 3, // Full Y-W-T sequences
-        relatedStretch: 'Cross-Body Shoulder Stretch: Pull arm across chest, hold 20 seconds each.',
+        relatedStretch:
+            'Cross-Body Shoulder Stretch: Pull arm across chest, hold 20 seconds each.',
       ),
       Exercise(
         id: 'bear_crawl',
         name: 'Bear Crawl',
-        description: 'Walking on hands and toes. Builds shoulder stability and core strength.',
+        description:
+            'Walking on hands and toes. Builds shoulder stability and core strength.',
         type: ExerciseType.strength,
         currentReps: 10, // Steps
-        relatedStretch: 'Downward Dog: Hands and feet on floor, hips high, hold 30 seconds.',
+        relatedStretch:
+            'Downward Dog: Hands and feet on floor, hips high, hold 30 seconds.',
       ),
       Exercise(
         id: 'crab_walk',
         name: 'Crab Walk',
-        description: 'Walking on hands and feet with chest facing up. Opens the chest/shoulders.',
+        description:
+            'Walking on hands and feet with chest facing up. Opens the chest/shoulders.',
         type: ExerciseType.strength,
         currentReps: 10, // Steps
-        relatedStretch: 'Chest Opener: Clasp hands behind back, lift and squeeze.',
+        relatedStretch:
+            'Chest Opener: Clasp hands behind back, lift and squeeze.',
       ),
 
       // ===== CORE & MIDLINE STABILITY =====
@@ -342,37 +398,47 @@ class ExerciseData {
         type: ExerciseType.strength,
         currentReps: 20, // Seconds per side - starts lower
         isTimed: true,
-        relatedStretch: 'Side Lying Stretch: Reach arm overhead, elongate the side body.',
+        isBilateral: true,
+        relatedStretch:
+            'Side Lying Stretch: Reach arm overhead, elongate the side body.',
       ),
       Exercise(
         id: 'dead_bug',
         name: 'Dead Bug',
-        description: 'Lying on back, moving opposite arm and leg while keeping the lower back glued to the floor.',
+        description:
+            'Lying on back, moving opposite arm and leg while keeping the lower back glued to the floor.',
         type: ExerciseType.strength,
         currentReps: defaultStartingReps, // Per side
-        relatedStretch: 'Supine Twist: Knees to one side, arms out, hold 30 seconds each.',
+        isBilateral: true,
+        relatedStretch:
+            'Supine Twist: Knees to one side, arms out, hold 30 seconds each.',
       ),
       Exercise(
         id: 'bird_dog',
         name: 'Bird Dog',
-        description: 'Kneeling, extending opposite arm and leg. Great for balance and back health.',
+        description:
+            'Kneeling, extending opposite arm and leg. Great for balance and back health.',
         type: ExerciseType.strength,
         currentReps: defaultStartingReps, // Per side
+        isBilateral: true,
         relatedStretch: 'Cat-Cow: Arch and round the spine slowly, 5 cycles.',
       ),
       Exercise(
         id: 'hollow_body_hold',
         name: 'Hollow Body Hold',
-        description: 'The gymnast\'s staple. Lower back on floor, legs and arms extended and hovering.',
+        description:
+            'The gymnast\'s staple. Lower back on floor, legs and arms extended and hovering.',
         type: ExerciseType.strength,
         currentReps: defaultStartingSeconds,
         isTimed: true,
-        relatedStretch: 'Knees to Chest: Hug both knees, rock gently side to side.',
+        relatedStretch:
+            'Knees to Chest: Hug both knees, rock gently side to side.',
       ),
       Exercise(
         id: 'l_sit',
         name: 'L-Sit (Floor)',
-        description: 'Sitting with legs straight, pushing hands into floor to lift butt (and maybe heels) off the ground.',
+        description:
+            'Sitting with legs straight, pushing hands into floor to lift butt (and maybe heels) off the ground.',
         type: ExerciseType.strength,
         currentReps: 15, // Seconds - challenging!
         isTimed: true,
@@ -383,10 +449,13 @@ class ExerciseData {
       Exercise(
         id: 'worlds_greatest_stretch',
         name: 'World\'s Greatest Stretch',
-        description: 'A deep lunge with a thoracic rotation (reaching hand to sky).',
+        description:
+            'A deep lunge with a thoracic rotation (reaching hand to sky).',
         type: ExerciseType.mobility,
         currentReps: 3, // Per side
-        relatedStretch: 'Hold each position for 2-3 breaths before transitioning.',
+        isBilateral: true,
+        relatedStretch:
+            'Hold each position for 2-3 breaths before transitioning.',
       ),
       Exercise(
         id: 'pigeon_pose',
@@ -395,40 +464,115 @@ class ExerciseData {
         type: ExerciseType.mobility,
         currentReps: defaultStartingSeconds, // Per side
         isTimed: true,
-        relatedStretch: 'Figure-4 Stretch: On back, ankle on knee, pull toward chest.',
+        isBilateral: true,
+        relatedStretch:
+            'Figure-4 Stretch: On back, ankle on knee, pull toward chest.',
       ),
       Exercise(
         id: '90_90_hip_stretch',
         name: '90/90 Hip Stretch',
-        description: 'Sitting with legs in 90-degree angles; switching knees side to side for hip internal/external rotation.',
+        description:
+            'Sitting with legs in 90-degree angles; switching knees side to side for hip internal/external rotation.',
         type: ExerciseType.mobility,
         currentReps: defaultStartingSeconds, // Per side
         isTimed: true,
-        relatedStretch: 'Butterfly Stretch: Soles together, knees out, lean forward.',
+        isBilateral: true,
+        relatedStretch:
+            'Butterfly Stretch: Soles together, knees out, lean forward.',
       ),
       Exercise(
         id: 'thoracic_bridge',
         name: 'Thoracic Bridge',
-        description: 'From a crab position, reaching one arm overhead and rotating to stretch the spine and belly.',
+        description:
+            'From a crab position, reaching one arm overhead and rotating to stretch the spine and belly.',
         type: ExerciseType.mobility,
         currentReps: 3, // Per side
-        relatedStretch: 'Thread the Needle: On all fours, reach arm under body and rotate.',
+        isBilateral: true,
+        relatedStretch:
+            'Thread the Needle: On all fours, reach arm under body and rotate.',
       ),
       Exercise(
         id: 'cat_cow',
         name: 'Cat-Cow',
-        description: 'On all fours, arching and rounding the spine with breath.',
+        description:
+            'On all fours, arching and rounding the spine with breath.',
         type: ExerciseType.mobility,
         currentReps: 5,
-        relatedStretch: 'Child\'s Pose: Sit back on heels, arms extended, breathe deeply.',
+        relatedStretch:
+            'Child\'s Pose: Sit back on heels, arms extended, breathe deeply.',
       ),
       Exercise(
         id: 'arm_circles',
         name: 'Arm Circles',
-        description: 'Large arm circles forward and backward to warm up shoulders.',
+        description:
+            'Large arm circles forward and backward to warm up shoulders.',
         type: ExerciseType.mobility,
         currentReps: 10, // Each direction
-        relatedStretch: 'Cross-Body Shoulder Stretch: Pull arm across chest, hold 20 seconds each.',
+        relatedStretch:
+            'Cross-Body Shoulder Stretch: Pull arm across chest, hold 20 seconds each.',
+      ),
+
+      // ===== ADDITIONAL CORE EXERCISES =====
+      Exercise(
+        id: 'flutter_kicks',
+        name: 'Flutter Kicks',
+        description:
+            'Lying on back, legs straight, alternating small kicks up and down. Keep lower back pressed to floor.',
+        type: ExerciseType.strength,
+        currentReps: defaultStartingSeconds,
+        isTimed: true,
+        relatedStretch:
+            'Knees to Chest: Hug both knees, rock gently side to side.',
+      ),
+      Exercise(
+        id: 'hello_dollies',
+        name: 'Hello Dollies',
+        description:
+            'Lying on back, legs straight up, spread legs apart then back together. Works inner thighs and core.',
+        type: ExerciseType.strength,
+        currentReps: 10,
+        relatedStretch:
+            'Butterfly Stretch: Soles together, knees out, lean forward.',
+      ),
+      Exercise(
+        id: 'situps',
+        name: 'Sit-Ups',
+        description:
+            'Classic core exercise. Lying on back, knees bent, curl up to touch knees with hands.',
+        type: ExerciseType.strength,
+        currentReps: defaultStartingReps,
+        relatedStretch:
+            'Cobra Pose: Lie on stomach, push chest up, hold 30 seconds.',
+      ),
+      Exercise(
+        id: 'crunches',
+        name: 'Crunches',
+        description:
+            'Partial sit-up focusing on the upper abs. Lift shoulder blades off the ground.',
+        type: ExerciseType.strength,
+        currentReps: 10,
+        relatedStretch: 'Knees to Chest: Hug both knees, rock gently.',
+      ),
+
+      // ===== ADDITIONAL UPPER BODY =====
+      Exercise(
+        id: 'dips',
+        name: 'Dips',
+        description:
+            'Using a chair or low surface, lower body by bending elbows. Targets triceps and chest.',
+        type: ExerciseType.strength,
+        currentReps: defaultStartingReps,
+        relatedStretch: 'Tricep Stretch: Elbow overhead, push down gently.',
+      ),
+      Exercise(
+        id: 'pullups',
+        name: 'Pull-Ups',
+        description:
+            'Hang from a bar, pull chin above the bar. The ultimate back and bicep builder. Use a doorway bar or playground.',
+        type: ExerciseType.strength,
+        currentReps: 2, // Challenging - start low
+        relatedStretch:
+            'Lat Stretch: Hang from bar with relaxed shoulders, or reach arm overhead and lean to side.',
       ),
     ];
   }

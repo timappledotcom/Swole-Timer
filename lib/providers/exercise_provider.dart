@@ -52,18 +52,21 @@ class ExerciseProvider extends ChangeNotifier {
   // ============ FILTERING LOGIC ============
 
   /// Get exercises available for today based on settings
-  /// 
+  ///
   /// Rules:
   /// - Sport Day (true) → Mobility exercises only
   /// - Rest Day (false) → Strength exercises only
   /// - Anti-Repetition: Exclude exercises performed yesterday
+  /// - Only include enabled exercises
   List<Exercise> getAvailableExercisesForToday(AppSettings settings) {
     final isSportDay = settings.isTodaySportDay();
-    
+
     // Filter by day type
-    final typeFilter = isSportDay ? ExerciseType.mobility : ExerciseType.strength;
-    
+    final typeFilter =
+        isSportDay ? ExerciseType.mobility : ExerciseType.strength;
+
     return _exercises
+        .where((exercise) => exercise.isEnabled)
         .where((exercise) => exercise.type == typeFilter)
         .where((exercise) => !exercise.wasPerformedYesterday())
         .toList();
@@ -71,9 +74,11 @@ class ExerciseProvider extends ChangeNotifier {
 
   /// Get exercises for a specific day type (for testing/preview)
   List<Exercise> getExercisesForDayType({required bool isSportDay}) {
-    final typeFilter = isSportDay ? ExerciseType.mobility : ExerciseType.strength;
-    
+    final typeFilter =
+        isSportDay ? ExerciseType.mobility : ExerciseType.strength;
+
     return _exercises
+        .where((exercise) => exercise.isEnabled)
         .where((exercise) => exercise.type == typeFilter)
         .where((exercise) => !exercise.wasPerformedYesterday())
         .toList();
@@ -82,19 +87,21 @@ class ExerciseProvider extends ChangeNotifier {
   /// Select a random exercise from available exercises for today
   Exercise? selectRandomExercise(AppSettings settings) {
     final available = getAvailableExercisesForToday(settings);
-    
+
     if (available.isEmpty) {
-      // Fallback: if all exercises were performed yesterday, 
-      // return any exercise of the correct type
+      // Fallback: if all exercises were performed yesterday,
+      // return any enabled exercise of the correct type
       final isSportDay = settings.isTodaySportDay();
-      final typeFilter = isSportDay ? ExerciseType.mobility : ExerciseType.strength;
-      final fallback = _exercises.where((e) => e.type == typeFilter).toList();
-      
+      final typeFilter =
+          isSportDay ? ExerciseType.mobility : ExerciseType.strength;
+      final fallback =
+          _exercises.where((e) => e.isEnabled && e.type == typeFilter).toList();
+
       if (fallback.isEmpty) return null;
-      
+
       return fallback[DateTime.now().millisecond % fallback.length];
     }
-    
+
     // Pick random from available
     return available[DateTime.now().millisecond % available.length];
   }
@@ -131,16 +138,36 @@ class ExerciseProvider extends ChangeNotifier {
     }
   }
 
+  /// Toggle exercise enabled state
+  Future<void> toggleExerciseEnabled(String exerciseId) async {
+    final index = _exercises.indexWhere((e) => e.id == exerciseId);
+    if (index == -1) return;
+
+    _exercises[index].isEnabled = !_exercises[index].isEnabled;
+    await _storageService.saveExercises(_exercises);
+    notifyListeners();
+  }
+
+  /// Set exercise enabled state
+  Future<void> setExerciseEnabled(String exerciseId, bool enabled) async {
+    final index = _exercises.indexWhere((e) => e.id == exerciseId);
+    if (index == -1) return;
+
+    _exercises[index].isEnabled = enabled;
+    await _storageService.saveExercises(_exercises);
+    notifyListeners();
+  }
+
   // ============ SESSION COMPLETION & PROGRESSION ============
 
   /// Complete an exercise session with progression logic
-  /// 
+  ///
   /// Progression Algorithm:
   /// - If user clicks "Yes (Easy)" AND completes target reps:
   /// - If user clicks "Yes (Easy)" AND completes target:
   ///   - For rep exercises: +2 reps
   ///   - For timed exercises: +5 seconds
-  /// 
+  ///
   /// Returns the updated exercise
   Future<Exercise> completeSession({
     required String exerciseId,
@@ -154,32 +181,32 @@ class ExerciseProvider extends ChangeNotifier {
 
     final exercise = _exercises[index];
     final targetReps = exercise.currentReps;
-    
+
     // Calculate new value based on progression algorithm
     int newValue = exercise.currentReps;
-    
+
     if (wasEasy && actualRepsPerformed >= targetReps) {
       // Progression: +5 seconds for timed, +2 reps for regular
       newValue = exercise.currentReps + (exercise.isTimed ? 5 : 2);
     }
-    
+
     // Update exercise with new values
     final updatedExercise = exercise.copyWith(
       currentReps: newValue,
       lastPerformedDate: DateTime.now(),
     );
-    
+
     // Update in list
     _exercises[index] = updatedExercise;
-    
+
     // Persist to storage
     await _storageService.saveExercises(_exercises);
-    
+
     // Clear current exercise
     _currentExercise = null;
-    
+
     notifyListeners();
-    
+
     return updatedExercise;
   }
 
@@ -200,7 +227,7 @@ class ExerciseProvider extends ChangeNotifier {
   /// Manually adjust rep count for an exercise
   Future<void> adjustReps(String exerciseId, int newReps) async {
     if (newReps < 1) newReps = 1; // Minimum 1 rep
-    
+
     final index = _exercises.indexWhere((e) => e.id == exerciseId);
     if (index == -1) return;
 
@@ -217,8 +244,9 @@ class ExerciseProvider extends ChangeNotifier {
   /// This allows re-shuffling/re-picking exercises for today
   Future<void> resetTodaysExercises(AppSettings settings) async {
     final isSportDay = settings.isTodaySportDay();
-    final typeFilter = isSportDay ? ExerciseType.mobility : ExerciseType.strength;
-    
+    final typeFilter =
+        isSportDay ? ExerciseType.mobility : ExerciseType.strength;
+
     for (int i = 0; i < _exercises.length; i++) {
       if (_exercises[i].type == typeFilter) {
         // Clear lastPerformedDate to make it available again
@@ -227,7 +255,7 @@ class ExerciseProvider extends ChangeNotifier {
         );
       }
     }
-    
+
     await _storageService.saveExercises(_exercises);
     notifyListeners();
   }

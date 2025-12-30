@@ -46,4 +46,5 @@ android/local.properties
 .fvm/
 
 # Generated files
-icon_transparent.png
+icon_transparent.pngswole-timer-v1.3.0.apk
+*.apk

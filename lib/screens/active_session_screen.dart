@@ -28,6 +28,9 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen>
   bool _exerciseTimerStarted = false;
   bool _exerciseTimerComplete = false;
 
+  // Bilateral exercise tracking
+  bool _isOnSecondSide = false;
+
   // Animation
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -55,7 +58,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen>
 
   void _startTimer() {
     if (_timerStarted) return;
-    
+
     setState(() {
       _timerStarted = true;
       _secondsRemaining = stretchDurationSeconds;
@@ -92,7 +95,7 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen>
       });
       return;
     }
-    
+
     setState(() {
       _exerciseTimerStarted = true;
       if (_exerciseSecondsRemaining == 0) {
@@ -155,6 +158,44 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen>
 
                   const Spacer(flex: 1),
 
+                  // Exercise name with side indicator for bilateral
+                  if (exercise.isBilateral)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _isOnSecondSide
+                            ? Colors.purple.withOpacity(0.2)
+                            : Colors.teal.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _isOnSecondSide
+                                ? Icons.swap_horiz
+                                : Icons.arrow_forward,
+                            size: 16,
+                            color:
+                                _isOnSecondSide ? Colors.purple : Colors.teal,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _isOnSecondSide ? 'SECOND SIDE' : 'FIRST SIDE',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1,
+                              color:
+                                  _isOnSecondSide ? Colors.purple : Colors.teal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                   // Exercise name
                   Text(
                     exercise.name.toUpperCase(),
@@ -175,7 +216,10 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen>
                     style: TextStyle(
                       fontSize: 13,
                       fontStyle: FontStyle.italic,
-                      color: Theme.of(context).colorScheme.outline.withOpacity(0.8),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withOpacity(0.8),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -243,9 +287,8 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen>
     final displaySeconds = _exerciseTimerStarted || _exerciseTimerComplete
         ? _exerciseSecondsRemaining
         : targetSeconds;
-    final color = exercise.type == ExerciseType.strength
-        ? Colors.blue
-        : Colors.orange;
+    final color =
+        exercise.type == ExerciseType.strength ? Colors.blue : Colors.orange;
 
     return Column(
       children: [
@@ -436,26 +479,110 @@ class _ActiveSessionScreenState extends State<ActiveSessionScreen>
   }
 
   Widget _buildCompleteButton(BuildContext context, Exercise exercise) {
-    return SizedBox(
-      width: double.infinity,
-      height: 64,
-      child: FilledButton(
-        onPressed: () => _showCompletionDialog(context, exercise),
-        style: FilledButton.styleFrom(
-          backgroundColor: exercise.type == ExerciseType.strength
-              ? Colors.blue
-              : Colors.orange,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+    // For bilateral exercises, show "Switch Sides" button first
+    final showSwitchSides = exercise.isBilateral && !_isOnSecondSide;
+
+    return Column(
+      children: [
+        if (showSwitchSides) ...[
+          SizedBox(
+            width: double.infinity,
+            height: 64,
+            child: FilledButton(
+              onPressed: () => _switchSides(exercise),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.teal,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.swap_horiz, size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    'SWITCH SIDES',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-        child: const Text(
-          'COMPLETE',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 2,
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: OutlinedButton(
+              onPressed: () => _showCompletionDialog(context, exercise),
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Skip second side',
+                style: TextStyle(fontSize: 14),
+              ),
+            ),
           ),
+        ] else
+          SizedBox(
+            width: double.infinity,
+            height: 64,
+            child: FilledButton(
+              onPressed: () => _showCompletionDialog(context, exercise),
+              style: FilledButton.styleFrom(
+                backgroundColor: exercise.type == ExerciseType.strength
+                    ? Colors.blue
+                    : Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Text(
+                exercise.isBilateral && _isOnSecondSide
+                    ? 'COMPLETE BOTH SIDES'
+                    : 'COMPLETE',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _switchSides(Exercise exercise) {
+    HapticFeedback.mediumImpact();
+
+    setState(() {
+      _isOnSecondSide = true;
+
+      // Reset timers for second side
+      if (exercise.isTimed) {
+        _exerciseTimer?.cancel();
+        _exerciseTimerStarted = false;
+        _exerciseTimerComplete = false;
+        _exerciseSecondsRemaining = exercise.currentReps;
+      }
+    });
+
+    // Show switch sides feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('🔄 Now do the other side!'),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
         ),
       ),
     );
