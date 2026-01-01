@@ -357,14 +357,14 @@ class StorageService {
 
     // Check current month
     if (SprintScheduler.needsSchedulingForMonth(sprints, now.year, now.month)) {
-      final newDays = SprintScheduler.generateSprintDaysForMonth(now.year, now.month);
+      final newDays =
+          SprintScheduler.generateSprintDaysForMonth(now.year, now.month);
       for (final day in newDays) {
         // Only add if not already scheduled
-        final exists = sprints.any((s) => 
-          s.date.year == day.year && 
-          s.date.month == day.month && 
-          s.date.day == day.day
-        );
+        final exists = sprints.any((s) =>
+            s.date.year == day.year &&
+            s.date.month == day.month &&
+            s.date.day == day.day);
         if (!exists) {
           sprints.add(SprintSession(date: day));
           updated = true;
@@ -374,14 +374,15 @@ class StorageService {
 
     // Check next month
     final nextMonth = DateTime(now.year, now.month + 1, 1);
-    if (SprintScheduler.needsSchedulingForMonth(sprints, nextMonth.year, nextMonth.month)) {
-      final newDays = SprintScheduler.generateSprintDaysForMonth(nextMonth.year, nextMonth.month);
+    if (SprintScheduler.needsSchedulingForMonth(
+        sprints, nextMonth.year, nextMonth.month)) {
+      final newDays = SprintScheduler.generateSprintDaysForMonth(
+          nextMonth.year, nextMonth.month);
       for (final day in newDays) {
-        final exists = sprints.any((s) => 
-          s.date.year == day.year && 
-          s.date.month == day.month && 
-          s.date.day == day.day
-        );
+        final exists = sprints.any((s) =>
+            s.date.year == day.year &&
+            s.date.month == day.month &&
+            s.date.day == day.day);
         if (!exists) {
           sprints.add(SprintSession(date: day));
           updated = true;

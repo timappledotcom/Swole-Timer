@@ -51,10 +51,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadSprintData() async {
     // Ensure sprints are scheduled for current and next month
     await _storageService.ensureSprintsScheduled();
-    
+
     final todaysSprint = await _storageService.getTodaysSprint();
     final upcomingSprints = await _storageService.getUpcomingSprints();
-    
+
     // Find next sprint (could be today if not completed, or a future one)
     SprintSession? nextSprint;
     if (upcomingSprints.isNotEmpty) {
@@ -338,10 +338,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         Text(
-                          _isWalkTimerRunning ? 'Timer running...' : 'Tap to see history',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: _isWalkTimerRunning ? Colors.green : Colors.grey[600],
-                              ),
+                          _isWalkTimerRunning
+                              ? 'Timer running...'
+                              : 'Tap to see history',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: _isWalkTimerRunning
+                                        ? Colors.green
+                                        : Colors.grey[600],
+                                  ),
                         ),
                       ],
                     ),
@@ -373,7 +378,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   label: Text(_isWalkTimerRunning ? 'Stop Walk' : 'Start Walk'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isWalkTimerRunning ? Colors.red : Colors.green,
+                    backgroundColor:
+                        _isWalkTimerRunning ? Colors.red : Colors.green,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -437,11 +443,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
       final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
       ];
       final daysUntil = dateOnly.difference(today).inDays;
-      
+
       if (daysUntil <= 7) {
         return '${weekdays[date.weekday - 1]} (in $daysUntil days)';
       }
@@ -491,15 +507,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Text(
                           isSprintDay
-                              ? (isCompleted ? 'Completed!' : 'Today is sprint day!')
+                              ? (isCompleted
+                                  ? 'Completed!'
+                                  : 'Today is sprint day!')
                               : _nextSprint != null
                                   ? 'Next: ${_formatSprintDate(_nextSprint!.date)}'
                                   : '2x per month',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: isSprintDay && !isCompleted
-                                    ? Colors.orange
-                                    : Colors.grey[600],
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: isSprintDay && !isCompleted
+                                        ? Colors.orange
+                                        : Colors.grey[600],
+                                  ),
                         ),
                       ],
                     ),

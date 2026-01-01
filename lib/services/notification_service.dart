@@ -368,7 +368,7 @@ class NotificationService {
     // Schedule for 9 AM on sprint day
     final now = DateTime.now();
     var scheduledTime = DateTime(now.year, now.month, now.day, 9, 0);
-    
+
     // If it's already past 9 AM, show immediately
     if (now.isAfter(scheduledTime)) {
       await _notifications.show(

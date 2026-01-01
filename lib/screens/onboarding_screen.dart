@@ -24,7 +24,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       icon: Icons.auto_awesome,
       title: 'The Primal Blueprint',
       subtitle: 'Live Like Your Ancestors',
-      body: '''Welcome to Swole Timer—an app built around Mark Sisson's 10 Primal Laws.
+      body:
+          '''Welcome to Swole Timer—an app built around Mark Sisson's 10 Primal Laws.
 
 These laws are based on how our ancestors lived for millions of years. Our genes expect certain inputs to thrive: movement, sunlight, real food, and rest.
 
@@ -34,7 +35,8 @@ Let's explore how this app helps you live primally in the modern world.''',
       icon: Icons.restaurant,
       title: '1. Eat Animals & Plants',
       subtitle: 'Fuel Your Body Right',
-      body: '''Our ancestors ate what they could hunt and gather—meat, fish, vegetables, fruits, nuts, and seeds.
+      body:
+          '''Our ancestors ate what they could hunt and gather—meat, fish, vegetables, fruits, nuts, and seeds.
 
 While this app doesn't track your food, remember: no amount of exercise can outrun a bad diet.
 
@@ -44,7 +46,8 @@ Eat real, whole foods. Avoid processed junk. Your workouts will thank you.''',
       icon: Icons.directions_walk,
       title: '2. Move Around a Lot',
       subtitle: 'At a Slow Pace',
-      body: '''Our ancestors walked 5-10 miles daily—foraging, hunting, and exploring.
+      body:
+          '''Our ancestors walked 5-10 miles daily—foraging, hunting, and exploring.
 
 That's why we track your Daily Walk. Hit that start button and accumulate walking time throughout the day. Aim for at least 30 minutes.
 
@@ -54,7 +57,8 @@ Low-level aerobic activity burns fat, improves mood, and builds the foundation f
       icon: Icons.fitness_center,
       title: '3. Lift Heavy Things',
       subtitle: 'Build Functional Strength',
-      body: '''Our ancestors lifted rocks, carried game, climbed trees, and built shelters.
+      body:
+          '''Our ancestors lifted rocks, carried game, climbed trees, and built shelters.
 
 Our "Greasing the Groove" system sends you strength exercises throughout the day—push-ups, squats, planks, and more.
 
@@ -64,7 +68,8 @@ Short bursts of effort, never to failure. This builds real, functional strength 
       icon: Icons.directions_run,
       title: '4. Run Really Fast',
       subtitle: 'Once in a While',
-      body: '''Sometimes our ancestors had to sprint—chasing prey or escaping predators.
+      body:
+          '''Sometimes our ancestors had to sprint—chasing prey or escaping predators.
 
 That's why we schedule 2 Sprint Sessions per month, at least 7 days apart. You'll get a notification on sprint days.
 
@@ -74,7 +79,8 @@ Just a few all-out sprints. Brief, intense, and incredibly effective for fitness
       icon: Icons.bedtime,
       title: '5. Get Lots of Sleep',
       subtitle: 'Recovery Is Non-Negotiable',
-      body: '''Our ancestors slept when it got dark and rose with the sun. 7-9 hours of quality sleep was the norm.
+      body:
+          '''Our ancestors slept when it got dark and rose with the sun. 7-9 hours of quality sleep was the norm.
 
 While we can't track your sleep, remember: this is when your body repairs and grows stronger.
 
@@ -84,7 +90,8 @@ Prioritize sleep. Your exercise "snacks" will feel easier when you're well-reste
       icon: Icons.sports_esports,
       title: '6. Play',
       subtitle: 'Have Fun Moving',
-      body: '''Our ancestors played—wrestling, games, exploration. Movement was joyful, not a chore.
+      body:
+          '''Our ancestors played—wrestling, games, exploration. Movement was joyful, not a chore.
 
 That's why our exercises are varied and our reminders are random. Each notification is a mini-adventure.
 
@@ -94,7 +101,8 @@ Don't take it too seriously. Enjoy the movement. Play with your kids. Dance. Hav
       icon: Icons.wb_sunny,
       title: '7. Get Sunlight',
       subtitle: 'Every Day',
-      body: '''Our ancestors lived outdoors. Sunlight regulated their hormones, vitamin D levels, and circadian rhythms.
+      body:
+          '''Our ancestors lived outdoors. Sunlight regulated their hormones, vitamin D levels, and circadian rhythms.
 
 Your daily walk is the perfect opportunity to get outside and soak up some rays.
 
@@ -104,7 +112,8 @@ Morning sunlight is especially powerful. Take your walk outside when you can.'''
       icon: Icons.healing,
       title: '8. Avoid Trauma',
       subtitle: 'Train Smart, Stay Healthy',
-      body: '''Our ancestors avoided unnecessary risks. An injury could mean death.
+      body:
+          '''Our ancestors avoided unnecessary risks. An injury could mean death.
 
 That's why we use "Greasing the Groove"—never training to failure, always staying fresh. Progressive overload is gradual (+2 reps when it feels easy).
 
@@ -124,7 +133,8 @@ Use this app mindfully. Do your exercises, take your walks, then put the phone d
       icon: Icons.psychology,
       title: '10. Use Your Mind',
       subtitle: 'Stay Curious & Creative',
-      body: '''Our ancestors solved problems, told stories, and explored their world.
+      body:
+          '''Our ancestors solved problems, told stories, and explored their world.
 
 Physical fitness supports mental fitness. Exercise improves focus, creativity, and mood.
 

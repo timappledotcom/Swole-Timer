@@ -72,8 +72,18 @@ class _WalkHistoryScreenState extends State<WalkHistoryScreen> {
 
     final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
 
     return '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}';
@@ -241,7 +251,8 @@ class _WalkHistoryScreenState extends State<WalkHistoryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  const Icon(Icons.timer_outlined, size: 16, color: Colors.grey),
+                  const Icon(Icons.timer_outlined,
+                      size: 16, color: Colors.grey),
                   const SizedBox(width: 4),
                   Text(
                     'Avg: $average',
@@ -319,10 +330,8 @@ class _WalkHistoryScreenState extends State<WalkHistoryScreen> {
     }
 
     // Only show walks with time recorded, limit to last 30 days
-    final walksWithTime = _allWalks
-        .where((w) => w.totalSeconds > 0)
-        .take(30)
-        .toList();
+    final walksWithTime =
+        _allWalks.where((w) => w.totalSeconds > 0).take(30).toList();
 
     return Card(
       clipBehavior: Clip.antiAlias,

@@ -87,26 +87,29 @@ class SprintSession {
 class SprintScheduler {
   /// Generate two random sprint days for a given month
   /// Ensures at least 7 days between sprints
-  static List<DateTime> generateSprintDaysForMonth(int year, int month, {Random? random}) {
+  static List<DateTime> generateSprintDaysForMonth(int year, int month,
+      {Random? random}) {
     random ??= Random();
-    
+
     final lastDayOfMonth = DateTime(year, month + 1, 0);
     final daysInMonth = lastDayOfMonth.day;
 
     // We need at least 14 days in the available period to have 2 sprints with 7 days gap
     // Split the month into two halves to ensure spacing
-    
+
     // First sprint: randomly in first half of month (day 1-14 or so)
     final firstHalfEnd = (daysInMonth / 2).floor();
     final firstSprintDay = random.nextInt(firstHalfEnd) + 1;
-    
+
     // Second sprint: at least 7 days after first, but within the month
     final earliestSecondDay = firstSprintDay + 7;
     final latestSecondDay = daysInMonth;
-    
+
     int secondSprintDay;
     if (earliestSecondDay <= latestSecondDay) {
-      secondSprintDay = random.nextInt(latestSecondDay - earliestSecondDay + 1) + earliestSecondDay;
+      secondSprintDay =
+          random.nextInt(latestSecondDay - earliestSecondDay + 1) +
+              earliestSecondDay;
     } else {
       // Fallback: just use the last day of month
       secondSprintDay = daysInMonth;
@@ -119,11 +122,12 @@ class SprintScheduler {
   }
 
   /// Check if sprint days need to be generated for the current month
-  static bool needsSchedulingForMonth(List<SprintSession> existingSprints, int year, int month) {
+  static bool needsSchedulingForMonth(
+      List<SprintSession> existingSprints, int year, int month) {
     final monthSprints = existingSprints.where((s) {
       return s.date.year == year && s.date.month == month;
     }).toList();
-    
+
     return monthSprints.length < 2;
   }
 
@@ -131,10 +135,8 @@ class SprintScheduler {
   static List<SprintSession> getUpcomingSprints(List<SprintSession> sprints) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
-    return sprints
-        .where((s) => !s.dateOnly.isBefore(today))
-        .toList()
+
+    return sprints.where((s) => !s.dateOnly.isBefore(today)).toList()
       ..sort((a, b) => a.date.compareTo(b.date));
   }
 
@@ -142,10 +144,8 @@ class SprintScheduler {
   static List<SprintSession> getPastSprints(List<SprintSession> sprints) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
-    return sprints
-        .where((s) => s.dateOnly.isBefore(today))
-        .toList()
+
+    return sprints.where((s) => s.dateOnly.isBefore(today)).toList()
       ..sort((a, b) => b.date.compareTo(a.date)); // Most recent first
   }
 
@@ -191,9 +191,10 @@ class SprintStatistics {
     // Only count past sprints for statistics (not future scheduled ones)
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     final pastSprints = sprints
-        .where((s) => s.dateOnly.isBefore(today) || s.dateOnly.isAtSameMomentAs(today))
+        .where((s) =>
+            s.dateOnly.isBefore(today) || s.dateOnly.isAtSameMomentAs(today))
         .toList()
       ..sort((a, b) => b.date.compareTo(a.date));
 

@@ -29,6 +29,19 @@ class ExerciseProvider extends ChangeNotifier {
 
   // ============ INITIALIZATION ============
 
+  /// IDs of exercises that have been removed from the app
+  static const Set<String> _removedExerciseIds = {
+    'single_leg_glute_bridge',
+    'duck_walk',
+    'broad_jump',
+    'prone_ywt',
+    'bear_crawl',
+    'crab_walk',
+    'dead_bug',
+    'hollow_body_hold',
+    'l_sit',
+  };
+
   /// Initialize the provider by loading exercises from storage
   Future<void> init() async {
     _isLoading = true;
@@ -40,6 +53,11 @@ class ExerciseProvider extends ChangeNotifier {
     if (storedExercises != null && storedExercises.isNotEmpty) {
       _exercises = storedExercises;
 
+      // Remove exercises that have been deleted from the app
+      final beforeCount = _exercises.length;
+      _exercises.removeWhere((e) => _removedExerciseIds.contains(e.id));
+      final removedCount = beforeCount - _exercises.length;
+
       // Check for new exercises in seed data and add them
       final seedExercises = ExerciseData.getSeedExercises();
       final existingIds = _exercises.map((e) => e.id).toSet();
@@ -47,7 +65,7 @@ class ExerciseProvider extends ChangeNotifier {
       final newExercises =
           seedExercises.where((e) => !existingIds.contains(e.id)).toList();
 
-      if (newExercises.isNotEmpty) {
+      if (newExercises.isNotEmpty || removedCount > 0) {
         _exercises.addAll(newExercises);
         await _storageService.saveExercises(_exercises);
       }

@@ -58,10 +58,28 @@ class _SprintHistoryScreenState extends State<SprintHistoryScreen> {
       return 'Yesterday';
     }
 
-    final weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final weekdays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
 
     return '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}';
@@ -69,8 +87,18 @@ class _SprintHistoryScreenState extends State<SprintHistoryScreen> {
 
   String _formatShortDate(DateTime date) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     return '${months[date.month - 1]} ${date.day}';
   }
@@ -284,7 +312,8 @@ class _SprintHistoryScreenState extends State<SprintHistoryScreen> {
           ? const Icon(Icons.check_circle, color: Colors.green)
           : isToday
               ? Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.orange.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
